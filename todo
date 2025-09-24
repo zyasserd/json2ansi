@@ -78,6 +78,11 @@
 
 - Others
     - single cell shorthand
-    - pagebreak
     - markdown parsing
 
+
+
+- pagebreak
+- min column width of fixed should be diff from that of flex
+- start and end appending
+- why is education not streching enough

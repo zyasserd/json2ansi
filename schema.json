@@ -178,18 +178,16 @@
         "fg": {
           "type": "string",
           "pattern": "^$|^#[0-9A-Fa-f]{6}$",
-          "default": "",
           "description": "Hex #RRGGBB or empty for terminal default"
         },
         "bg": {
           "type": "string",
           "pattern": "^$|^#[0-9A-Fa-f]{6}$",
-          "default": "",
           "description": "Hex #RRGGBB or empty for terminal default"
         },
-        "bold": { "type": "boolean", "default": false },
-        "italic": { "type": "boolean", "default": false },
-        "underline": { "type": "boolean", "default": false },
+        "bold": { "type": "boolean" },
+        "italic": { "type": "boolean" },
+        "underline": { "type": "boolean" },
         "link": { "type": "string" }
       }
     }
