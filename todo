@@ -76,10 +76,9 @@
 
 ---
 
+- wrap as a python exec in nix
+- "$schema"
+
 - markdown parsing
 - documentation
 
-
----
-
-- wrap as a python exec in nix

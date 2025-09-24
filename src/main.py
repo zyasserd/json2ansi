@@ -277,8 +277,7 @@ def render_document(doc, console, context_width=None):
 #  main
 # -------------------------------------------
 
-if __name__ == "__main__":
-    
+def main():  
     import argparse
     from contextlib import nullcontext
 
@@ -293,5 +292,8 @@ if __name__ == "__main__":
         console = Console(file=(f if args.output else None), force_terminal=True)
         doc = load_and_validate(args.json_file)
         render_document(doc, console, context_width=args.width)
-    
+
+
+if __name__ == "__main__":
+    main()
 

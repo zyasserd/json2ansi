@@ -1,77 +1,49 @@
 {
-  description = "A python template";
-  
+  description = "json2ansi: Python application";
+
   inputs = {
     nixpkgs.url = "nixpkgs/nixos-unstable";
-    
-    # in the nix global registry: `github:numtide/flake-utils`
     utils.url = "flake-utils";
   };
 
   outputs = { self, nixpkgs, utils }: utils.lib.eachDefaultSystem (system:
     let
-      pkgs = import nixpkgs {
-        inherit system;
-        # config.allowUnfree = true;
-      };
+      pkgs = import nixpkgs { inherit system; };
 
-      python = pkgs.python3; # change version here
+      python = pkgs.python3.withPackages (ps: with ps; [
+        jsonschema
+        jsonref
+        rich
+        json5
+        setuptools
+      ]);
       pythonPackages = python.pkgs;
 
-      # (( build a package from PyPI ))
-      # myPackage = pythonPackages.buildPythonPackage rec {
-      #   pname = "<fill>";
-      #   version = "<fill>";
-      #   format = "wheel";
-      #
-      #   src = pythonPackages.fetchPypi {
-      #     inherit pname version format;
-      #     python = "py3";
-      #     dist = "py3";
-      #     sha256 = "";
-      #   };
-      #
-      #   dependencies = with pythonPackages; [
-      #
-      #   ];
-      #
-      #   # doCheck = false;
-      # };
-      
+      propagatedBuildInputs = [ python ];
+
+      env = {
+        PYTHON_NIX = "${python.interpreter}";
+      };
+
     in {
-
-      # `devShell` or `devShells.default`
       devShell = pkgs.mkShell {
-        # The Nix packages provided in the environment
-        # Add any you need here
-        packages = [ 
-          (python.withPackages (p: with p; [
-            jsonschema
-            jsonref
-            rich
-            json5
-          ]))
-        ];
-
-        # Set any environment variables for your dev shell
-        env = {
-          # To be used by "ms-python.python" to set the correct version,
-          #   combined with vscode settings in .vscode dir.
-          PYTHON_NIX = "${python.interpreter}";
-        };
-
-        # Add any shell logic you want executed any time the environment is activated
+        inherit env;
+        packages = propagatedBuildInputs;
         shellHook = ''
         '';
       };
 
-
       packages = rec {
-        hello = pkgs.hello;
-        default = hello;
-      };
+        json2ansi = pythonPackages.buildPythonApplication {
+          inherit propagatedBuildInputs;
+          pname = "json2ansi";
+          version = "1.0.0";
+          src = ./.;
+          format = "pyproject";
+        };
 
+        default = json2ansi;
+      };
     }
   );
-
 }
