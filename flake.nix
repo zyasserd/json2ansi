@@ -49,6 +49,7 @@
             jsonschema
             jsonref
             rich
+            json5
           ]))
         ];
 

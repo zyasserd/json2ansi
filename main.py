@@ -1,12 +1,15 @@
 import json
+import json5
 import sys
 from pathlib import Path
 import jsonref
 from jsonschema import Draft7Validator, validators
 from rich.console import Console
-from rich.table import Table
+from rich.table import Table, Column
 from rich.text import Text
 from rich.padding import Padding
+from rich.markdown import Markdown
+from rich import box
 
 
 MIN_COLUMN_WIDTH = 3
@@ -37,11 +40,24 @@ def extend_with_default(validator_class):
 
 DefaultValidatingDraft7Validator = extend_with_default(Draft7Validator)
 
-# --- Your loader function ---
+def load_json5_with_refs(path: str):
+    """
+    Load a JSON/JSON5 file and expand $ref references.
+
+    Uses json5 to allow trailing commas and other JSON5 features,
+    then normalizes to strict JSON for jsonref.
+    """
+    with open(path, "r", encoding="utf-8") as f:
+        data = json5.load(f)
+
+    json_str = json.dumps(data)
+
+    # expands $ref
+    return jsonref.loads(json_str, jsonschema=True)
+
 def load_and_validate(file_path: str):
     """Load JSON, expand $ref, validate against schema, apply defaults."""
-    with open(file_path) as f:
-        data = jsonref.load(f, jsonschema=True)  # expands $ref
+    data = load_json5_with_refs(file_path)
 
     validator = DefaultValidatingDraft7Validator(SCHEMA)
     errors = sorted(validator.iter_errors(data), key=lambda e: e.path)
@@ -50,8 +66,6 @@ def load_and_validate(file_path: str):
             print(f"Validation error at {list(error.path)}: {error.message}")
         sys.exit(1)
     return data
-
-
 
 def style_to_rich(style_obj):
     """Convert style dict into Rich style string."""
@@ -63,29 +77,44 @@ def style_to_rich(style_obj):
     if style_obj.get("bold"): parts.append("bold")
     if style_obj.get("italic"): parts.append("italic")
     if style_obj.get("underline"): parts.append("underline")
+    if style_obj.get("link"):
+        parts.append(f"link {style_obj['link']}")
     return " ".join(parts)
+
+def combine_styles(styles):
+    """
+    Combine a list of style dicts into one, with later dicts overriding earlier ones.
+    """
+    result = {}
+    for style in styles:
+        result.update(style)
+    return result
 
 def render_text(node, column_width):
     """Render styled text or command node to Rich Text (no overflow here)."""
     match node:
         case {"type": "text", "value": val, **rest}:
             txt = Text(val)
-            for style in rest.get("styles", []):
-                txt.stylize(style_to_rich(style))
+            # TODO: add markdown support
+            styles = rest.get("styles", [])
+            if styles:
+                combined = combine_styles(styles)
+                txt.stylize(style_to_rich(combined))
 
         case {"type": "repeat", "value": val, **rest}:
             # Fill logic is done at table level via width
             txt = Text(val * column_width)
-            for style in rest.get("styles", []):
-                txt.stylize(style_to_rich(style))
+
+            styles = rest.get("styles", [])
+            if styles:
+                combined = combine_styles(styles)
+                txt.stylize(style_to_rich(combined))
 
         case list() if all(seg.get("type") == "text" for seg in node):
             # textArray: merge styled segments
             txt = Text()
             for seg in node:
-                seg_txt = Text(seg["value"])
-                for style in seg.get("styles", []):
-                    seg_txt.stylize(style_to_rich(style))
+                seg_txt = render_text(seg, column_width)
                 txt.append(seg_txt)
 
         case _:
@@ -157,16 +186,19 @@ def render_table(node, indent=0, context_width=DEFAULT_CONTEXT_WIDTH):
     rows = node["rows"]
     col_widths = compute_column_widths(columns, rows, context_width, indent)
 
+
     table = Table(
-        padding=(0, 0),
+        padding=(0, 1, 0, 0),
+        collapse_padding=True,
+        pad_edge=False,
         expand=False,
-        box=None
+        box=None,
+        show_edge=False,
         show_header=False,
         show_footer=False,
-        collapse_padding=True # TODO: ??
     )
+    # TODO: can you change the padding character?
 
-    print(columns)
     # Configure columns
     for i, col in enumerate(columns):
         justify = {"l": "left", "c": "center", "r": "right"}[col["align"]]
@@ -176,23 +208,21 @@ def render_table(node, indent=0, context_width=DEFAULT_CONTEXT_WIDTH):
             justify=justify,
             width=col_widths[i],
             no_wrap=no_wrap,
+            overflow="ellipsis",
         )
 
     # Add rows
     for row in rows:
         cells = []
         for col_index, cell in enumerate(row):
-            txt = render_text(cell, col_widths[col_index])
-
-            # TODO: is this necessary
-            overflow = columns[col_index]["overflow"]
-            if overflow == "truncate":
-                txt = txt.truncate(col_widths[col_index], overflow="ellipsis")
-
-            cells.append(txt)
+            cells.append(render_text(cell, col_widths[col_index]))
         table.add_row(*cells)
 
-    console.print(Padding(table, indent))
+    console.print(
+        Padding(table, (0, 0, 0, indent)),
+        justify={"l": "left", "c": "center", "r": "right"}[node["properties"]["align"]],
+        width=context_width
+    )
 
 
 def render_scaffold(node, indent=0, context_width=None):
