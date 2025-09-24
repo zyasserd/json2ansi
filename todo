@@ -1,0 +1,83 @@
+- Column properties
+    - Alignment: l | c | r → how content is padded within the final width.
+    - Overflow: wrap | truncate → applied when content > allocated width.
+    - Size:
+        - fixed(N) → exactly N chars, can overflow table width.
+        - dynamic → computed at runtime = max(cell length), cannot overflow its own content.
+        - flex(weight) → share of leftover space after fixed + dynamic.
+
+- table properties
+    - Alignment: l | c | r
+    - others (for later)
+        - border
+        - header and footer
+
+- table size procedure
+    - compute context width
+        - if you are in an global context, indent context, or others ...
+    - assign width to the cols
+        - fixed / dynamic easy
+        - flex -> get assigned the remaining space and computed
+        - checks
+            - total is less than the context width -> error out
+            - if a column has less than the min col width -> error out
+    - write the table text
+        - knowing the column size, using the overflow policy of each column to write the text
+
+
+---
+
+# documentation
+
+- outer scope
+    - `{ styles: {string -> Style}, content: Array<Scaffold> }`
+
+- Scaffold
+    - indent that takes the form
+        - `{ type: 'indent', indent: number, content: Content }`
+    - table
+        - `{ type: 'table', properties: { table: TableProperty, columns: Array<ColumnProperty>}, rows: Array<Text> }`
+
+
+- PrimitiveText
+    - `{ type: 'text', value: string, style: Style}`
+
+- Text
+    - PrimitiveText | Array<PrimitiveText> | Command
+
+- Command is a union type containing just this for now
+    - repeat
+        - `{ type: 'repeat', value: string }`
+            - keeps repeating the character for the length of the cell
+
+- PrimitiveStyle
+    - `{ type: 'style', fg: color, bg: color, bold: boolean, italic: boolean, underline: boolean, link: Optional<string>}`
+        - can you set up meaningful defaults
+
+- Style
+    - PrimitiveStyle | Array<PrimitiveStyle>
+
+- TableProperty
+    - `{ type: 'tableproperty', align: Alignment }`
+
+- ColumnProperty
+    - `{ type: 'columnproperty', align: Alignment, overflow: Overflow, size: Size}`
+
+- Alignment
+    - `'l' | 'c' | 'r'`
+
+- Overflow
+    - `wrap | truncate`
+
+- Size
+    - non negative integer (0 for dynamic, positive for fixed)
+    - positive number + '*' for flex
+
+
+---
+
+- Others
+    - single cell shorthand
+    - pagebreak
+    - markdown parsing
+

@@ -1,0 +1,197 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "title": "Terminal Markup DSL",
+  "type": "object",
+  "required": ["content", "styles"],
+  "properties": {
+    "styles": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/style" },
+      "description": "Named reusable styles"
+    },
+    "content": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/scaffold" }
+    }
+  },
+
+  "$defs": {
+    "scaffold": {
+      "oneOf": [
+        { "$ref": "#/$defs/indent" },
+        { "$ref": "#/$defs/table" }
+      ]
+    },
+
+    "indent": {
+      "type": "object",
+      "required": ["type", "indent", "content"],
+      "properties": {
+        "type": { "const": "indent" },
+        "indent": { "type": "integer", "minimum": 1 },
+        "content": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/scaffold" }
+        }
+      }
+    },
+
+    "table": {
+      "type": "object",
+      "required": ["type", "properties", "columns", "rows"],
+      "properties": {
+        "type": { "const": "table" },
+        "properties": { "$ref": "#/$defs/tableProperty" },
+        "columns": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/columnProperty" },
+          "minItems": 1
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/text" }
+          }
+        }
+      }
+    },
+
+    "tableProperty": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": { "const": "tableproperty" },
+        "align": {
+          "type": "string",
+          "enum": ["l", "c", "r"],
+          "default": "l",
+          "description": "Alignment of the table as a whole (default: left)"
+        }
+      }
+    },
+
+    "columnProperty": {
+      "type": "object",
+      "required": ["type", "size"],
+      "properties": {
+        "type": { "const": "columnproperty" },
+        "align": {
+          "type": "string",
+          "enum": ["l", "c", "r"],
+          "default": "l"
+        },
+        "overflow": {
+          "type": "string",
+          "enum": ["wrap", "truncate"],
+          "default": "wrap"
+        },
+        "size": { "$ref": "#/$defs/size" }
+      }
+    },
+
+    "size": {
+      "type": "object",
+      "oneOf": [
+        {
+          "properties": {
+            "mode": { "const": "fixed" },
+            "value": { "type": "integer", "minimum": 0 }
+          },
+          "required": ["mode", "value"],
+          "description": "Fixed size: N>=1. If value=0 → dynamic (max cell length)."
+        },
+        {
+          "properties": {
+            "mode": { "const": "flex" },
+            "value": { "type": "integer", "minimum": 1 }
+          },
+          "required": ["mode", "value"],
+          "description": "Flex size: weight >= 1."
+        }
+      ]
+    },
+
+    "content": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          { "$ref": "#/$defs/primitiveText" },
+          { "$ref": "#/$defs/textArray" },
+          { "$ref": "#/$defs/command" }
+        ]
+      }
+    },
+
+    "text": {
+      "oneOf": [
+        { "$ref": "#/$defs/primitiveText" },
+        { "$ref": "#/$defs/textArray" },
+        { "$ref": "#/$defs/command" }
+      ]
+    },
+
+    "primitiveText": {
+      "type": "object",
+      "required": ["type", "value"],
+      "properties": {
+        "type": { "const": "text" },
+        "value": { "type": "string" },
+        "styles": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/style" },
+          "description": "List of styles applied, merged left-to-right"
+        }
+      }
+    },
+
+    "textArray": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/primitiveText" },
+      "description": "Array of styled text segments forming a cell"
+    },
+
+    "command": {
+      "oneOf": [
+        { "$ref": "#/$defs/repeat" }
+      ]
+    },
+
+    "repeat": {
+      "type": "object",
+      "required": ["type", "value"],
+      "properties": {
+        "type": { "const": "repeat" },
+        "value": { "type": "string", "minLength": 1 },
+        "styles": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/style" }
+        }
+      }
+    },
+
+    "style": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": { "const": "style" },
+        "fg": {
+          "type": "string",
+          "pattern": "^$|^#[0-9A-Fa-f]{6}$",
+          "default": "",
+          "description": "Hex #RRGGBB or empty for terminal default"
+        },
+        "bg": {
+          "type": "string",
+          "pattern": "^$|^#[0-9A-Fa-f]{6}$",
+          "default": "",
+          "description": "Hex #RRGGBB or empty for terminal default"
+        },
+        "bold": { "type": "boolean", "default": false },
+        "italic": { "type": "boolean", "default": false },
+        "underline": { "type": "boolean", "default": false },
+        "link": { "type": "string" }
+      }
+    }
+  }
+}

@@ -1,0 +1,5 @@
+{
+    "python.defaultInterpreterPath": "${env:PYTHON_NIX}",
+    "python-envs.defaultEnvManager": "ms-python.python:system",
+    "python-envs.pythonProjects": [],
+}
