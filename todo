@@ -76,8 +76,5 @@
 
 ---
 
-- wrap as a python exec in nix
-
-- markdown parsing
 - documentation
 

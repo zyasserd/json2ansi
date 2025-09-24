@@ -10,6 +10,7 @@ from rich.text import Text
 from rich.padding import Padding
 from rich.markdown import Markdown
 from rich import box
+from markdown_to_rich import md_to_rich_text
 
 
 
@@ -106,8 +107,7 @@ def render_text(node, column_width):
     """Render styled text or command node to Rich Text (no overflow here)."""
     match node:
         case {"type": "text", "value": val, **rest}:
-            txt = Text(val)
-            # TODO: add markdown support
+            txt = md_to_rich_text(val)
             styles = rest.get("styles", [])
             if styles:
                 combined = combine_styles(styles)
