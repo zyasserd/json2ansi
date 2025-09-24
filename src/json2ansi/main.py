@@ -5,12 +5,10 @@ from pathlib import Path
 import jsonref
 from jsonschema import Draft7Validator, validators
 from rich.console import Console
-from rich.table import Table, Column
+from rich.table import Table
 from rich.text import Text
 from rich.padding import Padding
-from rich.markdown import Markdown
-from rich import box
-from markdown_to_rich import md_to_rich_text
+from .markdown_to_rich import md_to_rich_text
 
 
 
