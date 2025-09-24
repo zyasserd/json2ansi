@@ -32,6 +32,9 @@
         }
       ]
     },
+    {"type": "br"},
+    {"type": "br"},
+    {"type": "br"},
     {
       "type": "table",
       "properties": { "type": "tableproperty", "align": "l" },
