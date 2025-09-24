@@ -13,8 +13,8 @@
       python = pkgs.python3.withPackages (ps: with ps; [
         jsonschema
         jsonref
-        rich
         json5
+        rich
         setuptools
       ]);
       pythonPackages = python.pkgs;

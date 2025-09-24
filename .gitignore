@@ -1,2 +1,3 @@
 .direnv/
 examples/temp/
+__pycache__
