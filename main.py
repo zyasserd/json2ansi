@@ -18,8 +18,6 @@ DEFAULT_CONTEXT_WIDTH = 100
 SCHEMA_FILE = Path("schema.json")
 SCHEMA = json.loads(SCHEMA_FILE.read_text())
 
-console = Console()
-
 
 
 # -------------------------------------------
@@ -212,7 +210,7 @@ def compute_column_widths(columns, rows, context_width, indent):
     return col_widths
 
 
-def render_table(node, indent=0, context_width=DEFAULT_CONTEXT_WIDTH):
+def render_table(node, console, indent=0, context_width=DEFAULT_CONTEXT_WIDTH):
     """Render a table node to a Rich Table, aware of context width and column sizing."""
     columns = node["columns"]
     rows = node["rows"]
@@ -257,21 +255,21 @@ def render_table(node, indent=0, context_width=DEFAULT_CONTEXT_WIDTH):
     )
 
 
-def render_scaffold(node, indent=0, context_width=None):
+def render_scaffold(node, console, indent=0, context_width=None):
     if node["type"] == "indent":
         child_indent = indent + node["indent"]
         for child in node["content"]:
-            render_scaffold(child, indent=child_indent, context_width=context_width)
+            render_scaffold(child, console, indent=child_indent, context_width=context_width)
 
     elif node["type"] == "table":
-        render_table(node, indent=indent, context_width=context_width)
+        render_table(node, console, indent=indent, context_width=context_width)
 
     elif node["type"] == "br":
         console.print()
 
-def render_document(doc, context_width=None):
+def render_document(doc, console, context_width=None):
     for node in doc["content"]:
-        render_scaffold(node, indent=0, context_width=context_width)
+        render_scaffold(node, console, indent=0, context_width=context_width)
 
 
 
@@ -280,12 +278,20 @@ def render_document(doc, context_width=None):
 # -------------------------------------------
 
 if __name__ == "__main__":
+    
     import argparse
+    from contextlib import nullcontext
+
     parser = argparse.ArgumentParser(description="Render JSON to ANSI table")
     parser.add_argument("json_file", help="Path to JSON file")
     parser.add_argument("--width", type=int, default=DEFAULT_CONTEXT_WIDTH, help="Global context width")
+    parser.add_argument("--output", type=str, default=None, help="Write ANSI output to file instead of stdout")
     args = parser.parse_args()
 
-    doc = load_and_validate(args.json_file)
-    render_document(doc, context_width=args.width)
+
+    with (open(args.output, "w", encoding="utf-8") if args.output else nullcontext()) as f:
+        console = Console(file=(f if args.output else None), force_terminal=True)
+        doc = load_and_validate(args.json_file)
+        render_document(doc, console, context_width=args.width)
+    
 
