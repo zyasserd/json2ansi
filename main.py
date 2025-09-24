@@ -234,6 +234,9 @@ def render_scaffold(node, indent=0, context_width=None):
     elif node["type"] == "table":
         render_table(node, indent=indent, context_width=context_width)
 
+    elif node["type"] == "br":
+        console.print()
+
 def render_document(doc, context_width=None):
     for node in doc["content"]:
         render_scaffold(node, indent=0, context_width=context_width)

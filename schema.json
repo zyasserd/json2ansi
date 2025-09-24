@@ -19,8 +19,17 @@
     "scaffold": {
       "oneOf": [
         { "$ref": "#/$defs/indent" },
-        { "$ref": "#/$defs/table" }
+        { "$ref": "#/$defs/table" },
+        { "$ref": "#/$defs/br" }
       ]
+    },
+
+    "br": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": { "const": "br" }
+      }
     },
 
     "indent": {
