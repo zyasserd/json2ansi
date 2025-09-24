@@ -13,7 +13,7 @@ from rich import box
 
 
 MIN_COLUMN_WIDTH = 3
-DEFAULT_CONTEXT_WIDTH = 80
+DEFAULT_CONTEXT_WIDTH = 100
 
 SCHEMA_FILE = Path("schema.json")
 SCHEMA = json.loads(SCHEMA_FILE.read_text())
