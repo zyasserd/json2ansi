@@ -12,10 +12,12 @@ from rich.markdown import Markdown
 from rich import box
 
 
+
 FLEX_MIN_COLUMN_WIDTH = 3
 DEFAULT_CONTEXT_WIDTH = 100
 
-SCHEMA_FILE = Path("schema.json")
+# Use absolute path to schema.json based on script location
+SCHEMA_FILE = Path(__file__).parent / "schema.json"
 SCHEMA = json.loads(SCHEMA_FILE.read_text())
 
 
