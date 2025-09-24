@@ -12,7 +12,8 @@ from .markdown_to_rich import md_to_rich_text
 
 
 
-FLEX_MIN_COLUMN_WIDTH = 3
+MIN_COLUMN_WIDTH_FLEX = 3
+MIN_COLUMN_WIDTH_DYNAMIC = 1
 DEFAULT_CONTEXT_WIDTH = 100
 
 # Use absolute path to schema.json based on script location
@@ -134,7 +135,7 @@ def render_text(node, column_width):
 
 
 def calc_dynamic_width(rows, col_idx):
-    max_len = FLEX_MIN_COLUMN_WIDTH
+    max_len = MIN_COLUMN_WIDTH_DYNAMIC
     for row in rows:
         cell = row[col_idx]
         match cell:
@@ -172,7 +173,7 @@ def closest_ratio_distribution(weights, total):
 
 def compute_column_widths(columns, rows, context_width, indent):
     """Compute column widths for a table given columns, rows, context width, and indent."""
-    effective_width = max(context_width - indent, FLEX_MIN_COLUMN_WIDTH)
+    effective_width = max(context_width - indent, MIN_COLUMN_WIDTH_FLEX)
     num_cols = len(columns)
     total_separators = num_cols - 1
 
@@ -200,7 +201,7 @@ def compute_column_widths(columns, rows, context_width, indent):
         # Use closest_ratio_distribution to assign widths
         flex_widths = closest_ratio_distribution(flex_weights, remaining)
         for idx, i in enumerate(flex_indices):
-            col_widths[i] = max(flex_widths[idx], FLEX_MIN_COLUMN_WIDTH)
+            col_widths[i] = max(flex_widths[idx], MIN_COLUMN_WIDTH_FLEX)
 
     # Error if table cannot fit
     used_width = sum(col_widths) + total_separators
