@@ -12,7 +12,7 @@ from rich.markdown import Markdown
 from rich import box
 
 
-MIN_COLUMN_WIDTH = 3
+FLEX_MIN_COLUMN_WIDTH = 3
 DEFAULT_CONTEXT_WIDTH = 100
 
 SCHEMA_FILE = Path("schema.json")
@@ -20,8 +20,14 @@ SCHEMA = json.loads(SCHEMA_FILE.read_text())
 
 console = Console()
 
-# --- Extend validator to set defaults ---
+
+
+# -------------------------------------------
+#  JSON PARSING
+# -------------------------------------------
+
 def extend_with_default(validator_class):
+    """Extend validator to set defaults"""
     validate_props = validator_class.VALIDATORS["properties"]
 
     def set_defaults(validator, properties, instance, schema):
@@ -38,7 +44,6 @@ def extend_with_default(validator_class):
         validator_class, {"properties": set_defaults},
     )
 
-DefaultValidatingDraft7Validator = extend_with_default(Draft7Validator)
 
 def load_json5_with_refs(path: str):
     """
@@ -59,6 +64,7 @@ def load_and_validate(file_path: str):
     """Load JSON, expand $ref, validate against schema, apply defaults."""
     data = load_json5_with_refs(file_path)
 
+    DefaultValidatingDraft7Validator = extend_with_default(Draft7Validator)
     validator = DefaultValidatingDraft7Validator(SCHEMA)
     errors = sorted(validator.iter_errors(data), key=lambda e: e.path)
     if errors:
@@ -66,6 +72,12 @@ def load_and_validate(file_path: str):
             print(f"Validation error at {list(error.path)}: {error.message}")
         sys.exit(1)
     return data
+
+
+
+# -------------------------------------------
+#  RENDERING
+# -------------------------------------------
 
 def style_to_rich(style_obj):
     """Convert style dict into Rich style string."""
@@ -124,7 +136,7 @@ def render_text(node, column_width):
 
 
 def calc_dynamic_width(rows, col_idx):
-    max_len = MIN_COLUMN_WIDTH
+    max_len = FLEX_MIN_COLUMN_WIDTH
     for row in rows:
         cell = row[col_idx]
         match cell:
@@ -140,9 +152,29 @@ def calc_dynamic_width(rows, col_idx):
     return max_len
 
 
+def closest_ratio_distribution(weights, total):
+    if total == 0:
+        return [0] * len(weights)
+    if sum(weights) == 0:
+        raise ValueError("All weights are zero, cannot distribute")
+
+    total_weight = sum(weights)
+    exact_values = [w / total_weight * total for w in weights]
+    floor_values = [int(v) for v in exact_values]
+    
+    remainder = total - sum(floor_values)
+    # pair remainders with index
+    remainders = [(v - int(v), i) for i, v in enumerate(exact_values)]
+    # assign remaining units to largest fractional parts
+    for _, i in sorted(remainders, reverse=True)[:remainder]:
+        floor_values[i] += 1
+    
+    return floor_values
+
+
 def compute_column_widths(columns, rows, context_width, indent):
     """Compute column widths for a table given columns, rows, context width, and indent."""
-    effective_width = max(context_width - indent, MIN_COLUMN_WIDTH)
+    effective_width = max(context_width - indent, FLEX_MIN_COLUMN_WIDTH)
     num_cols = len(columns)
     total_separators = num_cols - 1
 
@@ -154,9 +186,9 @@ def compute_column_widths(columns, rows, context_width, indent):
         size = col["size"]
         match size:
             case {"mode": "fixed", "value": v} if v > 0:
-                col_widths[i] = max(v, MIN_COLUMN_WIDTH)
+                col_widths[i] = v  # No minimum for fixed
             case {"mode": "fixed", "value": 0}:
-                col_widths[i] = max(calc_dynamic_width(rows, i), MIN_COLUMN_WIDTH)
+                col_widths[i] = calc_dynamic_width(rows, i)  # No minimum for dynamic
             case {"mode": "flex", "value": w}:
                 flex_indices.append(i)
                 flex_weights.append(w)
@@ -167,13 +199,13 @@ def compute_column_widths(columns, rows, context_width, indent):
     used_width = sum(w for w in col_widths if w is not None) + total_separators
     remaining = effective_width - used_width
     if flex_indices:
-        total_weight = sum(flex_weights)
+        # Use closest_ratio_distribution to assign widths
+        flex_widths = closest_ratio_distribution(flex_weights, remaining)
         for idx, i in enumerate(flex_indices):
-            w = int(remaining * (flex_weights[idx] / total_weight))
-            col_widths[i] = max(w, MIN_COLUMN_WIDTH)
-    used_width = sum(col_widths) + total_separators
+            col_widths[i] = max(flex_widths[idx], FLEX_MIN_COLUMN_WIDTH)
 
     # Error if table cannot fit
+    used_width = sum(col_widths) + total_separators
     if used_width > effective_width:
         raise ValueError(f"Table width {used_width} exceeds context width {effective_width}")
     
@@ -241,6 +273,12 @@ def render_document(doc, context_width=None):
     for node in doc["content"]:
         render_scaffold(node, indent=0, context_width=context_width)
 
+
+
+# -------------------------------------------
+#  main
+# -------------------------------------------
+
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description="Render JSON to ANSI table")
@@ -249,5 +287,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     doc = load_and_validate(args.json_file)
-    print("-"*DEFAULT_CONTEXT_WIDTH)
     render_document(doc, context_width=args.width)
+

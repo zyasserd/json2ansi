@@ -76,13 +76,12 @@
 
 ---
 
-- Others
-    - single cell shorthand
-    - markdown parsing
+- markdown parsing
+- documentation
+
+- export to ansi file
 
 
+---
 
-- pagebreak
-- min column width of fixed should be diff from that of flex
-- start and end appending
-- why is education not streching enough
+- wrap as a python exec in nix
