@@ -1,5 +1,5 @@
 {
-  "$schema": "./schema.json",
+  "$schema": "../src/schema.json",
   "styles": {
     "header": { "type": "style", "fg": "#FF0000", "bg": "#FFFFFF", "bold": true }
   },

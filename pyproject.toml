@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "json2ansi"
+version = "1.0.0"
+description = "Convert JSON to ANSI colored output"
+authors = [
+    { name="Zyad Yasser" }
+]
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "jsonschema",
+    "jsonref",
+    "rich",
+    "json5"
+]
+
+[project.scripts]
+json2ansi = "main:main"
+
