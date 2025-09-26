@@ -290,7 +290,21 @@ def main():
 
 
     with (open(args.output, "w", encoding="utf-8") if args.output else nullcontext()) as f:
-        console = Console(file=(f if args.output else None), force_terminal=True)
+        if args.output:
+            # in case we are in a dumb terminal like that of github actions
+            import os
+            os.environ["TERM"] = "xterm-256color"
+
+            # Force ANSI and truecolor for file output
+            console = Console(
+                file=f,
+                force_terminal=True,
+                force_interactive=False,
+                width=args.width,
+            )
+        else:
+            console = Console(force_terminal=True)
+        
         doc = load_and_validate(args.json_file)
         render_document(doc, console, context_width=args.width)
 
