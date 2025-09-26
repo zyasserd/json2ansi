@@ -116,4 +116,10 @@ A cell in a table row is a `Text`, which can be:
 
 - Table borders
 - header/footer rows
+- different ansi styles
+  - blink (slow, fast)
+  - strike through
+- allow dynamic columns i.e. `fixed: 0`, with wrap
+  - how will that be implemented
+
 
