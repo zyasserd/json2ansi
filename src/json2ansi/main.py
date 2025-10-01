@@ -14,7 +14,7 @@ from .markdown_to_rich import md_to_rich_text
 
 MIN_COLUMN_WIDTH_FLEX = 3
 MIN_COLUMN_WIDTH_DYNAMIC = 1
-DEFAULT_CONTEXT_WIDTH = 100
+DEFAULT_CONTEXT_WIDTH = 80
 
 # Use absolute path to schema.json based on script location
 SCHEMA_FILE = Path(__file__).parent / "schema.json"
