@@ -16,7 +16,7 @@ python -m json2ansi.main <input.jsonc> [--width N] [--output file]
 ```
 
 - `json_file`: Path to your JSON/JSON5 file.
-- `--width`: Set context width (default: 100).
+- `--width`: Set context width (default: 80).
 - `--output`: Write ANSI output to a file instead of stdout.
 
 ## Nix Usage
